@@ -182,5 +182,10 @@ def TrainKFold(dataframe, k_folds, n_epochs, batch_size, lr, balance_training=Tr
     if output_folder:
             output["evaluate"]["roc"].savefig(os.path.join(output_folder, "roc.png"))
 
+            results_table = output["evaluate"]["dataset"].copy()
+            results_table["preds"] = output["evaluate"]["preds"].tolist()
+            results_table["50_correct"] = (output["evaluate"]["targs"] == np.argmax(output["evaluate"]["preds"], axis=1))
+            results_table.to_csv(os.path.join(output_folder, "results.csv"), index=False)
+
 
     return output

@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 from shutil import copyfile
 from . PlottingMetrics  import *
+import pandas as pd
 import seaborn as sns
 import argparse
 import os
@@ -163,6 +164,7 @@ def Train(dataframe, n_epochs, batch_size, lr, balance_training=True, evaluate =
         output["evaluate"]["targs"] = interpre.targs.detach().cpu().numpy()
         output["evaluate"]["labels"] = list(interpre.vocab.o2i.values())
 
+
         output["evaluate"]["roc"], output["evaluate"]["roc_auc"] = PlotRoc(output["evaluate"]["preds"], output["evaluate"]["targs"])
 
 
@@ -172,6 +174,16 @@ def Train(dataframe, n_epochs, batch_size, lr, balance_training=True, evaluate =
         #output["plot_losses"].savefig(os.path.join(output_folder, "losses.png"))
         if evaluate:
             output["evaluate"]["roc"].savefig(os.path.join(output_folder, "roc.png"))
+
+        # results table
+        results_table = output["evaluate"]["dataset"].copy()
+        results_table["preds"] = interpre.preds.detach().cpu().numpy().tolist()
+        results_table["50_correct"] = (output["evaluate"]["targs"] == np.argmax(interpre.preds.detach().cpu().numpy(), axis=1 ))
+        results_table.to_csv(os.path.join(output_folder, "results.csv"), index=False)
+
+        save_img_filename = os.path.join(output_folder, "results")
+        PlotPred(dataframe, learn, save_image=save_img_filename)
+
 
     return output
 

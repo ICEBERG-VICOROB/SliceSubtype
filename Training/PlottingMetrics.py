@@ -127,7 +127,7 @@ def PlotRoc(preds, targets, labels=None):
 
 
 # TODO: Add image part
-def PlotPred(df, learn, threshold=0.5, size_per_graph=4, save_image_folder=None, create_plot=True ):
+def PlotPred(df, learn, threshold=0.5, size_per_graph=4, save_image_folder=None, save_image=None ): # create_plot=True,
 
     val = df[df['is_valid'] == True]
     if isinstance(learn, tuple):
@@ -136,9 +136,8 @@ def PlotPred(df, learn, threshold=0.5, size_per_graph=4, save_image_folder=None,
         preds, targs = learn.get_preds()
         valid_ds = learn.dls.valid_ds
 
-    for l, t in zip(val['labels'], targs):
-        print(int(l),int(t))
-
+    #for l, t in zip(val['labels'], targs):
+    #    print(int(l),int(t))
 
     # Check that the information is correct
     if any(int(l) != int(t) for l, t in zip(val['labels'], targs)):
@@ -156,12 +155,15 @@ def PlotPred(df, learn, threshold=0.5, size_per_graph=4, save_image_folder=None,
     if save_image_folder is not None and not os.path.exists(save_image_folder):
         os.mkdir(save_image_folder)
         res_dict_names = {}
+
         for i in range(len(targs)):
             if res_dict["names"][i] not in res_dict_names:
                 res_dict_names[res_dict["names"][i]] = []
             res_dict_names[res_dict["names"][i]].append(i)
+
         for k, items in res_dict_names.items():
             x_axis, y_axis = squared_part(len(items))
+            print(x_axis, y_axis)
             fig, axs = plt.subplots(y_axis, x_axis)
             for i, idx in enumerate(items):
                 px = i % x_axis
@@ -172,15 +174,21 @@ def PlotPred(df, learn, threshold=0.5, size_per_graph=4, save_image_folder=None,
                     axs[py, px].set_title('pred {} ({})\n{}'.format(p, t, res_dict["fnames"][idx]),
                                           color=('green' if t == p else 'red'))
                     axs[py, px].imshow(res_dict["PILs"][idx])
-                else:
+                elif x_axis > 1:
                     axs[px].set_title('pred {} ({})\n{}'.format(p, t, res_dict["fnames"][idx]),
                                           color=('green' if t == p else 'red'))
                     axs[px].imshow(res_dict["PILs"][idx])
+                else:
+                    axs.set_title('pred {} ({})\n{}'.format(p, t, res_dict["fnames"][idx]),
+                                      color=('green' if t == p else 'red'))
+                    axs.imshow(res_dict["PILs"][idx])
+
             fig.set_size_inches(size_per_graph * x_axis, size_per_graph * y_axis)
             fig.savefig(os.path.join(save_image_folder, "{}.jpg".format(k)))
             plt.close(fig)
 
-    if create_plot:
+
+    if save_image is not None and not os.path.exists(save_image):
         x_axis, y_axis = squared_part(len(targs))
         fig1, axs = plt.subplots(y_axis, x_axis)
         for i in range(len(targs)):
@@ -191,6 +199,8 @@ def PlotPred(df, learn, threshold=0.5, size_per_graph=4, save_image_folder=None,
             axs[py, px].set_title('pred {} ({})\n{}'.format(p,t,res_dict["fnames"][i]), color=('green' if t==p else 'red'))
             axs[py ,px].imshow(res_dict["PILs"][i])
         fig1.set_size_inches(size_per_graph * x_axis, size_per_graph * y_axis)
+        image_filename = os.path.splitext(save_image)[0] + ".jpg" #remove extension and add jpg
+        fig1.savefig(image_filename)
 
 
 
